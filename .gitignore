@@ -4,3 +4,4 @@ __pycache__/
 .local/
 *.log
 config.user.json
+.git-commit-ai-analyzer/
