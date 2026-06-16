@@ -1,0 +1,22 @@
+{
+  "active": "deepseek",
+  "prompt_extra": "请按嵌入式固件习惯分析，每条主线必须引用具体文件路径或函数名。",
+  "profiles": {
+    "deepseek": {
+      "api_key": "",
+      "base_url": "https://api.deepseek.com",
+      "model": "deepseek-chat",
+      "chat_path": "/v1/chat/completions",
+      "max_tokens": 32768,
+      "timeout": 180
+    },
+    "openai": {
+      "api_key": "",
+      "base_url": "https://api.openai.com",
+      "model": "gpt-4o-mini",
+      "chat_path": "/v1/chat/completions",
+      "max_tokens": 32768,
+      "timeout": 180
+    }
+  }
+}

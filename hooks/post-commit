@@ -1,0 +1,64 @@
+#!/bin/sh
+# Global post-commit: record commit SHA <-> entry_id mapping
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+[ -f "$REPO_ROOT/.git-commit-ai-analyzer.disabled" ] && exit 0
+[ -f "$REPO_ROOT/.git-commit-analyzer.disabled" ] && exit 0
+
+_resolve_tool_home() {
+  if [ -n "$GIT_COMMIT_AI_ANALYZER_HOME" ]; then
+    echo "$GIT_COMMIT_AI_ANALYZER_HOME"
+    return
+  fi
+  if [ -n "$GIT_COMMIT_ANALYZER_HOME" ]; then
+    echo "$GIT_COMMIT_ANALYZER_HOME"
+    return
+  fi
+  if [ -n "$USERPROFILE" ]; then
+    for home in "$USERPROFILE/.git-commit-ai-analyzer" "$USERPROFILE/.git-commit-analyzer"; do
+      if [ -d "$home/scripts" ]; then
+        echo "$home"
+        return
+      fi
+    done
+    echo "$USERPROFILE/.git-commit-ai-analyzer"
+    return
+  fi
+  for home in "$HOME/.git-commit-ai-analyzer" "$HOME/.git-commit-analyzer"; do
+    if [ -d "$home/scripts" ]; then
+      echo "$home"
+      return
+    fi
+  done
+  echo "$HOME/.git-commit-ai-analyzer"
+}
+
+TOOL_HOME="$(_resolve_tool_home)"
+SCRIPT="$TOOL_HOME/scripts/update_project.py"
+[ -f "$SCRIPT" ] || SCRIPT="$TOOL_HOME/scripts/update_skill.py"
+[ -f "$SCRIPT" ] || exit 0
+
+PY=""
+if [ -n "$USERPROFILE" ]; then
+  for cand in py python python3; do
+    if command -v "$cand" >/dev/null 2>&1; then
+      case "$(command -v "$cand")" in
+        *WindowsApps*) continue ;;
+      esac
+      PY="$cand"
+      break
+    fi
+  done
+else
+  for cand in python3 python py; do
+    if command -v "$cand" >/dev/null 2>&1; then
+      PY="$cand"
+      break
+    fi
+  done
+fi
+[ -n "$PY" ] || exit 0
+
+export GIT_COMMIT_AI_ANALYZER_HOME="$TOOL_HOME"
+"$PY" "$SCRIPT" --repo "$REPO_ROOT" --finish-commit-map || true
+exit 0

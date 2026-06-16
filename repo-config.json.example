@@ -1,0 +1,5 @@
+{
+  "prompt_extra": "本项目为国标直流充电桩固件。分析时请说明影响的协议模块、保护链路与采样通道。",
+  "project_context_extra": "技术栈：C/Keil，目录 SourceCode/Main、protocol_*。",
+  "max_ai_context_entries": 30
+}

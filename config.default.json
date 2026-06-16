@@ -1,0 +1,23 @@
+{
+  "ignore_patterns": [
+    "^\\.git-commit-ai-analyzer/\\.local/",
+    "^\\.git-commit-ai-analyzer/PROJECT\\.md$",
+    "^.*/build_log\\.txt$",
+    "^.*/build_sync_log\\.txt$",
+    "^Project/build_log\\.txt$",
+    "^Project/build_sync_log\\.txt$",
+    ".*\\.uvguix\\..*$",
+    ".*JLinkLog\\.txt$",
+    ".*/list/.*\\.map$",
+    ".*/list/.*\\.lst$",
+    ".*/output/.*"
+  ],
+  "diff_max_lines_per_file": 120,
+  "diff_max_total_bytes": 24000,
+  "max_recent_entries": 50,
+  "max_commit_map_entries": 100,
+  "ai_timeout_sec": 200,
+  "ai_context_enabled": true,
+  "max_ai_context_entries": 30,
+  "ai_context_include_diff": false
+}

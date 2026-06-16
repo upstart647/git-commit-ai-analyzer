@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.pyo
+.local/
+*.log
+config.user.json
