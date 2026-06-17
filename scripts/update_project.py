@@ -236,6 +236,40 @@ def _gitignore_covers_analyzer_dir(txt):
     return False
 
 
+def _gitignore_has_exact_rule(txt, rule):
+    for line in txt.splitlines():
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        if s == rule:
+            return True
+    return False
+
+
+def ensure_gitignore_analyzer_local(repo_root, log_fn):
+    """\u7528\u6cd5: \u786e\u4fdd .local \u72b6\u6001\u76ee\u5f55\u88ab .gitignore \u5ffd\u7565\uff0c\u907f\u514d commit \u540e\u518d\u6b21\u53d8\u810f"""
+    gi = os.path.join(repo_root, ".gitignore")
+    needle = ".git-commit-ai-analyzer/.local/"
+    txt = ""
+    if os.path.isfile(gi):
+        try:
+            txt = read_text_utf8(gi)
+            if _gitignore_has_exact_rule(txt, needle) or _gitignore_covers_analyzer_dir(txt):
+                return
+        except Exception:
+            pass
+    try:
+        with open(gi, "a", encoding="utf-8", newline="\n") as f:
+            if txt and not txt.endswith("\n"):
+                f.write("\n")
+            f.write("\n# git-commit-ai-analyzer local state\n")
+            f.write(needle + "\n")
+        if log_fn:
+            log_fn("\u5df2\u8ffd\u52a0 .gitignore: " + needle)
+    except Exception:
+        pass
+
+
 def ensure_gitignore_local(repo_root, log_fn):
     if not is_gb_dc_project(repo_root):
         return
@@ -729,7 +763,7 @@ def format_entry_meta_rows(entry_id, commit_sha=None):
     if commit_sha:
         rows.append("| Commit | {} |".format(commit_sha))
     else:
-        rows.append("| Commit | (\u63d0\u4ea4\u540e\u7531 post-commit \u5199\u5165) |")
+        rows.append("| Commit | (\u7b56\u7565A\u9ed8\u8ba4\u4e0d\u56de\u5199 commit hash) |")
     return rows
 
 
@@ -958,12 +992,15 @@ def finish_commit_map_record(repo_root, commit_map_file, pending_file, log_fn):
             head_sha[:8], pending.get("entry_id")
         )
     )
-    project_md = os.path.join(repo_root, ".git-commit-ai-analyzer", "PROJECT.md")
-    if not os.path.isfile(project_md):
-        project_md = os.path.join(repo_root, ".git-commit-analyzer", "PROJECT.md")
-    patch_project_md_after_commit(project_md, pending.get("entry_id"), head_sha, log_fn)
-    ai_context_md = os.path.join(os.path.dirname(project_md), "AI_CONTEXT.md")
-    patch_ai_context_after_commit(ai_context_md, pending.get("entry_id"), head_sha, log_fn)
+    if os.environ.get("GIT_COMMIT_AI_ANALYZER_PATCH_AFTER_COMMIT", "").strip() == "1":
+        project_md = os.path.join(repo_root, ".git-commit-ai-analyzer", "PROJECT.md")
+        if not os.path.isfile(project_md):
+            project_md = os.path.join(repo_root, ".git-commit-analyzer", "PROJECT.md")
+        patch_project_md_after_commit(project_md, pending.get("entry_id"), head_sha, log_fn)
+        ai_context_md = os.path.join(os.path.dirname(project_md), "AI_CONTEXT.md")
+        patch_ai_context_after_commit(ai_context_md, pending.get("entry_id"), head_sha, log_fn)
+    else:
+        log_fn("FinishCommitMap: \u5df2\u8df3\u8fc7 post-commit \u6587\u6863\u56de\u5199")
 
 
 def test_commit_reachable(repo_root, commit_sha):
@@ -1445,6 +1482,7 @@ def main():
     except Exception:
         return 0
 
+    ensure_gitignore_analyzer_local(repo_root, log_fn)
     ensure_gitignore_local(repo_root, log_fn)
 
     if args.finish_commit_map:
